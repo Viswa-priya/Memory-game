@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 40px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-gap: 15px;
+      justify-content: center;
+    }
+    .card {
+      height: 100px;
+      background-color: #6c757d;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .card.flipped {
+      background-color: #fff;
+      color: #000;
+      cursor: default;
+    }
+    .card.matched {
+      background-color: #198754;
+      color: white;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container text-center">
+  <h2 class="mb-4">🧠 Memory Game</h2>
+  <div class="card-grid" id="gameBoard"></div>
+  <button class="btn btn-primary mt-4" onclick="initGame()">Restart</button>
+</div>
+
+<script>
+  const symbols = ['🍎', '🚗', '🐶', '🎵', '🌞', '🏀', '📚', '🍕'];
+  let cards = [];
+  let firstCard = null;
+  let secondCard = null;
+  let lockBoard = false;
+
+  function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  function createCards() {
+    const doubled = [...symbols, ...symbols];
+    return shuffle(doubled).map((symbol, index) => ({
+      id: index,
+      symbol,
+      matched: false,
+      flipped: false,
+    }));
+  }
+
+  function initGame() {
+    cards = createCards();
+    firstCard = secondCard = null;
+    lockBoard = false;
+
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '';
+
+    cards.forEach((card, index) => {
+      const div = document.createElement('div');
+      div.classList.add('card');
+      div.dataset.index = index;
+      div.addEventListener('click', onCardClick);
+      board.appendChild(div);
+    });
+  }
+
+  function onCardClick(e) {
+    const index = e.currentTarget.dataset.index;
+    const card = cards[index];
+
+    if (lockBoard || card.flipped || card.matched) return;
+
+    card.flipped = true;
+    render();
+
+    if (!firstCard) {
+      firstCard = card;
+    } else {
+      secondCard = card;
+      lockBoard = true;
+
+      setTimeout(() => {
+        if (firstCard.symbol === secondCard.symbol) {
+          firstCard.matched = true;
+          secondCard.matched = true;
+        } else {
+          firstCard.flipped = false;
+          secondCard.flipped = false;
+        }
+
+        firstCard = secondCard = null;
+        lockBoard = false;
+        render();
+      }, 1000);
+    }
+  }
+
+  function render() {
+    const board = document.getElementById('gameBoard');
+    board.childNodes.forEach((div, index) => {
+      const card = cards[index];
+      div.classList.remove('flipped', 'matched');
+      if (card.flipped || card.matched) {
+        div.textContent = card.symbol;
+        div.classList.add(card.matched ? 'matched' : 'flipped');
+      } else {
+        div.textContent = '';
+      }
+    });
+  }
+
+  initGame();
+</script>
+
+</body>
+</html>
